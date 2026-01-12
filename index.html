@@ -4,62 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>运动追踪 Pro</title>
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="运动助手">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="manifest" href="manifest.json">
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-    
     <style>
         :root { --primary: #007AFF; --bg: #f2f2f7; --danger: #ff3b30; --edit: #ff9500; --cancel: #8e8e93; --success: #34c759; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 15px; padding-top: env(safe-area-inset-top); user-select: none; }
         .card { background: white; padding: 18px; border-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px; }
         h2 { margin: 0 0 10px 0; font-size: 0.85rem; color: #8e8e93; text-transform: uppercase; }
-        
-        /* 滚轮选择器 */
-        .picker-wrapper {
-            position: relative; height: 150px; overflow: hidden; background: #f8f8fa;
-            border-radius: 14px; margin: 10px 0; display: flex; justify-content: center;
-            cursor: ns-resize; touch-action: none;
-            mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent);
-        }
-        .picker-list { padding: 0; margin: 0; list-style: none; transition: transform 0.2s cubic-bezier(0.1, 0.45, 0.1, 0.85); text-align: center; }
-        .picker-item { height: 50px; line-height: 50px; font-size: 24px; font-weight: bold; color: #8e8e93; cursor: pointer; }
+        .step-bar { display: flex; gap: 8px; margin: 10px 0; align-items: center; justify-content: center; }
+        .step-chip { padding: 6px 14px; background: #eee; border-radius: 20px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .step-chip.active { background: var(--primary); color: white; font-weight: bold; }
+        .picker-wrapper { position: relative; height: 150px; overflow: hidden; background: #f8f8fa; border-radius: 14px; margin: 5px 0; display: flex; justify-content: center; cursor: ns-resize; touch-action: none; mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); }
+        .picker-list { padding: 0; margin: 0; list-style: none; transition: transform 0.2s cubic-bezier(0.1, 0.45, 0.1, 0.85); text-align: center; width: 100%; }
+        .picker-item { height: 50px; line-height: 50px; font-size: 24px; font-weight: bold; color: #8e8e93; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .picker-item.active { color: var(--primary); font-size: 30px; }
         .picker-center-line { position: absolute; top: 50px; left: 0; right: 0; height: 50px; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; pointer-events: none; }
-
-        /* 界面元素 */
+        .picker-unit-suffix { font-size: 14px; margin-left: 5px; font-weight: normal; color: #999; }
+        .active .picker-unit-suffix { color: var(--primary); font-weight: bold; }
+        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .preset-btn { background: #f0f0f2; border: none; padding: 14px 5px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .preset-btn.active { background: var(--primary); color: white; }
+        input[type="date"], select, input[type="text"], input[type="number"] { width: 100%; padding: 14px; border: 1px solid #eee; border-radius: 12px; font-size: 16px; background: #fafafa; margin-bottom: 10px; box-sizing: border-box; }
+        .main-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: bold; font-size: 17px; margin-top: 10px; }
+        .cancel-btn { width: 100%; background: var(--cancel); color: white; border: none; padding: 12px; border-radius: 14px; margin-top: 10px; display: none; font-weight: bold; }
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; background: #e3e3e8; padding: 3px; border-radius: 10px; }
         .tab-item { flex: 1; text-align: center; padding: 8px; font-size: 13px; border-radius: 8px; cursor: pointer; }
         .tab-item.active { background: white; font-weight: bold; }
-        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .preset-btn { background: #f0f0f2; border: none; padding: 12px 5px; border-radius: 12px; font-size: 14px; transition: 0.2s; }
-        .preset-btn.active { background: var(--primary); color: white; }
-        input[type="date"], select, input[type="text"] { width: 100%; padding: 14px; border: 1px solid #eee; border-radius: 12px; font-size: 16px; background: #fafafa; margin-bottom: 10px; box-sizing: border-box; }
-        .main-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: bold; font-size: 17px; margin-top: 10px; }
-        .main-btn.edit-mode { background: var(--edit); }
-        .cancel-btn { width: 100%; background: var(--cancel); color: white; border: none; padding: 12px; border-radius: 14px; margin-top: 10px; display: none; font-weight: bold; }
-        
-        /* 历史记录 */
-        .date-header { font-size: 22px; font-weight: 800; color: #000; margin: 25px 0 10px 5px; }
+        .date-header { font-size: 20px; font-weight: 800; color: #000; margin: 25px 0 10px 5px; }
         .record-row { background: white; padding: 15px; border-radius: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); cursor: pointer; }
         .record-name { font-size: 17px; font-weight: 600; }
         .record-meta { font-size: 10px; color: #b0b0b0; margin-top: 4px; }
         .record-value { font-size: 18px; font-weight: 700; color: var(--primary); }
         .del-btn { color: var(--danger); font-size: 11px; margin-left: 10px; border: 1px solid #ff3b3033; padding: 4px 8px; border-radius: 6px; }
-
         #settings { display: none; background: #f9f9f9; padding: 15px; border-radius: 12px; margin-top: 10px; border: 1px solid #eee; }
         .manage-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: white; border-radius: 8px; margin-bottom: 5px; font-size: 14px; }
     </style>
 </head>
 <body>
-
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h2>📊 统计分析</h2>
@@ -76,136 +63,129 @@
     <div class="card" id="inputCard">
         <h2 id="inputLabel">⚡ 快速录入</h2>
         <div id="presetContainer" class="preset-grid"></div>
-        
-        <label>选择数值 (滚动/鼠标滚轮)</label>
+        <div class="step-bar">
+            <span style="font-size:13px;color:#666">间隔:</span>
+            <div class="step-chip active" onclick="changeGlobalStep(1, this)">1</div>
+            <div class="step-chip" onclick="changeGlobalStep(5, this)">5</div>
+            <div class="step-chip" onclick="changeGlobalStep(10, this)">10</div>
+        </div>
         <div class="picker-wrapper" id="valuePicker">
             <div class="picker-center-line"></div>
             <ul class="picker-list" id="pickerList"></ul>
         </div>
-
-        <label>运动日期</label>
         <input type="date" id="exerciseDate">
-
         <button class="main-btn" id="submitBtn" onclick="saveOrUpdateRecord()">确认并保存</button>
         <button class="cancel-btn" id="cancelBtn" onclick="exitEditMode()">取消修改</button>
-
-        <div style="text-align: center; margin-top: 20px;">
-            <span onclick="toggleSettings()" style="color: var(--primary); font-size: 13px; cursor: pointer;">⚙️ 设置、管理与备份</span>
-        </div>
-
+        <div style="text-align:center;margin-top:20px;"><span onclick="toggleSettings()" style="color:var(--primary);font-size:13px;cursor:pointer;">⚙️ 项目管理与数据备份</span></div>
         <div id="settings">
             <h3>项目管理</h3>
             <div id="managePresetList"></div>
-            <input type="text" id="newPresetName" placeholder="项目名">
-            <select id="newPresetUnit">
-                <option value="个">个</option><option value="组">组</option><option value="分钟">分钟</option>
-            </select>
-            <button onclick="addPreset()" style="background:var(--success); color:white; border:none; padding:10px; border-radius:8px; width:100%;">添加项目</button>
+            <input type="text" id="newPresetName" placeholder="新项目名">
+            <select id="newPresetUnit"><option value="个">个</option><option value="组">组</option><option value="分钟">分钟</option></select>
+            <button onclick="addPreset()" style="background:var(--success);color:white;border:none;padding:10px;border-radius:8px;width:100%;">添加项目</button>
             <hr>
-            <h3>💾 数据备份</h3>
-            <textarea id="backupText" readonly style="height:60px; font-size:10px;" placeholder="点击下方生成备份"></textarea>
-            <button onclick="exportData()" style="background:var(--primary); color:white; border:none; padding:8px; border-radius:8px; width:100%; margin: 5px 0;">生成备份代码</button>
-            <textarea id="importText" style="height:60px; font-size:10px;" placeholder="在此粘贴代码以恢复"></textarea>
-            <button onclick="importData()" style="background:var(--danger); color:white; border:none; padding:8px; border-radius:8px; width:100%;">恢复数据</button>
+            <button onclick="exportData()" style="background:var(--primary);color:white;border:none;padding:8px;border-radius:8px;width:100%;margin:5px 0;">备份数据</button>
+            <textarea id="importText" style="height:60px;font-size:10px;" placeholder="粘贴备份代码..."></textarea>
+            <button onclick="importData()" style="background:var(--danger);color:white;border:none;padding:8px;border-radius:8px;width:100%;">恢复数据</button>
         </div>
     </div>
-
     <div id="historyList"></div>
 
     <script>
-        let myChart = null, selectedPreset = null, currentRange = 'week', editingRecordId = null, currentValue = 0;
-        const DATA_KEY = 'sports_data_v10', PRESET_KEY = 'sports_presets_v10';
-        let presets = JSON.parse(localStorage.getItem(PRESET_KEY) || '[{"name":"俯卧撑","unit":"个"},{"name":"慢跑","unit":"分钟"}]');
+        let myChart = null, selectedPreset = null, currentRange = 'week', editingRecordId = null, currentValue = 0, globalStep = 1;
+        const DATA_KEY = 'sports_data_v15', PRESET_KEY = 'sports_presets_v15';
+        let presets = JSON.parse(localStorage.getItem(PRESET_KEY) || '[{"name":"俯卧撑","unit":"个"},{"name":"深蹲","unit":"个"}]');
 
-        // 初始化滚轮
-        const pickerList = document.getElementById('pickerList');
-        for(let i = 0; i <= 200; i++) {
-            const li = document.createElement('li'); li.className = 'picker-item'; li.innerText = i;
-            pickerList.appendChild(li);
+        const list = document.getElementById('pickerList'), wrapper = document.getElementById('valuePicker');
+        let startY = 0, currentTranslateY = 50, isDragging = false, currentStepItems = [];
+
+        function changeGlobalStep(step, el) { globalStep = parseInt(step); document.querySelectorAll('.step-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); refreshPicker(currentValue); }
+        function refreshPicker(targetValue = 0) {
+            list.innerHTML = ''; currentStepItems = []; const unit = selectedPreset ? selectedPreset.unit : '';
+            for(let i = 0; i <= 500; i += globalStep) {
+                const li = document.createElement('li'); li.className = 'picker-item';
+                li.innerHTML = `${i}<span class="picker-unit-suffix">${unit}</span>`;
+                list.appendChild(li); currentStepItems.push(i);
+            }
+            let idx = currentStepItems.reduce((prev, curr, idx) => Math.abs(curr - targetValue) < Math.abs(currentStepItems[prev] - targetValue) ? idx : prev, 0);
+            scrollToIndex(idx);
         }
+        function scrollToIndex(index) { index = Math.max(0, Math.min(index, currentStepItems.length - 1)); currentValue = currentStepItems[index]; currentTranslateY = 50 - (index * 50); list.style.transform = `translateY(${currentTranslateY}px)`; document.querySelectorAll('.picker-item').forEach((item, i) => item.classList.toggle('active', i === index)); }
+        wrapper.addEventListener('wheel', e => { e.preventDefault(); scrollToIndex(currentStepItems.indexOf(currentValue) + (e.deltaY > 0 ? 1 : -1)); }, { passive: false });
+        wrapper.addEventListener('touchstart', e => { startY = e.touches[0].pageY; isDragging = true; list.style.transition = 'none'; });
+        wrapper.addEventListener('touchmove', e => { if(!isDragging) return; e.preventDefault(); list.style.transform = `translateY(${currentTranslateY + e.touches[0].pageY - startY}px)`; });
+        wrapper.addEventListener('touchend', e => { isDragging = false; list.style.transition = 'transform 0.2s cubic-bezier(0.1, 0.45, 0.1, 0.85)'; currentTranslateY += e.changedTouches[0].pageY - startY; scrollToIndex(Math.round((50 - currentTranslateY) / 50)); });
 
-        const wrapper = document.getElementById('valuePicker');
-        let startY = 0, currentTranslateY = 50, isDragging = false;
-
-        function scrollToIndex(index) {
-            index = Math.max(0, Math.min(index, 200));
-            currentValue = index;
-            currentTranslateY = 50 - (index * 50);
-            pickerList.style.transform = `translateY(${currentTranslateY}px)`;
-            document.querySelectorAll('.picker-item').forEach((item, i) => item.classList.toggle('active', i === index));
-        }
-
-        wrapper.addEventListener('wheel', e => { e.preventDefault(); scrollToIndex(currentValue + (e.deltaY > 0 ? 1 : -1)); }, { passive: false });
-        wrapper.addEventListener('touchstart', e => { startY = e.touches[0].pageY; isDragging = true; pickerList.style.transition = 'none'; });
-        wrapper.addEventListener('touchmove', e => { if(!isDragging) return; e.preventDefault(); let deltaY = e.touches[0].pageY - startY; pickerList.style.transform = `translateY(${currentTranslateY + deltaY}px)`; });
-        wrapper.addEventListener('touchend', e => { isDragging = false; pickerList.style.transition = 'transform 0.2s cubic-bezier(0.1, 0.45, 0.1, 0.85)'; let deltaY = e.changedTouches[0].pageY - startY; currentTranslateY += deltaY; scrollToIndex(Math.round((50 - currentTranslateY) / 50)); });
-        pickerList.addEventListener('click', e => { if(e.target.classList.contains('picker-item')) scrollToIndex(Array.from(pickerList.children).indexOf(e.target)); });
-
-        // 核心功能
         function toggleSettings() { const s = document.getElementById('settings'); s.style.display = s.style.display === 'block' ? 'none' : 'block'; renderManagePresets(); }
-        function addPreset() { const name = document.getElementById('newPresetName').value.trim(); const unit = document.getElementById('newPresetUnit').value; if(name) { presets.push({name, unit}); savePresets(); document.getElementById('newPresetName').value = ''; } }
-        function deletePreset(index) { if(confirm("删除预设？")) { presets.splice(index, 1); savePresets(); } }
-        function savePresets() { localStorage.setItem(PRESET_KEY, JSON.stringify(presets)); renderPresets(); updateChartProjectList(); }
+        function addPreset() { const name = document.getElementById('newPresetName').value.trim(), unit = document.getElementById('newPresetUnit').value; if(name) { presets.push({name, unit}); localStorage.setItem(PRESET_KEY, JSON.stringify(presets)); location.reload(); } }
         function renderPresets() { document.getElementById('presetContainer').innerHTML = presets.map((p, i) => `<button class="preset-btn ${selectedPreset?.name === p.name ? 'active' : ''}" onclick="selectPreset(${i})">${p.name}</button>`).join(''); if(!selectedPreset && presets.length > 0) selectPreset(0); }
+        function selectPreset(index) { selectedPreset = presets[index]; renderPresets(); document.getElementById('inputLabel').innerText = editingRecordId ? `📝 修改：${selectedPreset.name} (${selectedPreset.unit})` : `⚡ ${selectedPreset.name} (${selectedPreset.unit})`; refreshPicker(currentValue); }
         function renderManagePresets() { document.getElementById('managePresetList').innerHTML = presets.map((p, i) => `<div class="manage-item"><span>${p.name}(${p.unit})</span><span style="color:red" onclick="deletePreset(${i})">移除</span></div>`).join(''); }
-        function selectPreset(index, manualRecord = null) { selectedPreset = manualRecord ? { name: manualRecord.name, unit: manualRecord.unit } : presets[index]; renderPresets(); document.getElementById('inputLabel').innerText = editingRecordId ? `📝 修改：${selectedPreset.name}` : `⚡ ${selectedPreset.name} (${selectedPreset.unit})`; }
+        function deletePreset(index) { if(confirm("确认删除？")) { presets.splice(index, 1); localStorage.setItem(PRESET_KEY, JSON.stringify(presets)); location.reload(); } }
 
         function saveOrUpdateRecord() {
-            const date = document.getElementById('exerciseDate').value;
-            let records = JSON.parse(localStorage.getItem(DATA_KEY) || '[]');
-            if(editingRecordId) {
-                const i = records.findIndex(r => r.id === editingRecordId);
-                if(i !== -1) { records[i].name = selectedPreset.name; records[i].value = currentValue; records[i].sportDate = date; }
-                exitEditMode();
-            } else {
-                records.push({ id: Date.now(), name: selectedPreset.name, value: currentValue, unit: selectedPreset.unit, sportDate: date, logTime: dayjs().format('YYYY-MM-DD HH:mm:ss') });
-            }
-            localStorage.setItem(DATA_KEY, JSON.stringify(records));
-            updateUI();
+            const date = document.getElementById('exerciseDate').value; let rs = JSON.parse(localStorage.getItem(DATA_KEY) || '[]');
+            if(editingRecordId) { const i = rs.findIndex(r => r.id === editingRecordId); if(i !== -1) { rs[i].name = selectedPreset.name; rs[i].value = currentValue; rs[i].sportDate = date; } exitEditMode(); }
+            else { rs.push({ id: Date.now(), name: selectedPreset.name, value: currentValue, unit: selectedPreset.unit, sportDate: date, logTime: dayjs().format('HH:mm') }); }
+            localStorage.setItem(DATA_KEY, JSON.stringify(rs)); updateUI();
         }
 
         function editRecord(id) {
-            const r = JSON.parse(localStorage.getItem(DATA_KEY)).find(r => r.id === id);
-            editingRecordId = id; scrollToIndex(r.value); document.getElementById('exerciseDate').value = r.sportDate;
-            document.getElementById('submitBtn').innerText = "确认修改"; document.getElementById('submitBtn').classList.add('edit-mode');
-            document.getElementById('cancelBtn').style.display = 'block'; selectPreset(null, r);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const r = JSON.parse(localStorage.getItem(DATA_KEY)).find(r => r.id === id); editingRecordId = id; document.getElementById('exerciseDate').value = r.sportDate;
+            document.getElementById('submitBtn').innerText = "确认修改"; document.getElementById('cancelBtn').style.display = 'block';
+            let pIdx = presets.findIndex(p => p.name === r.name); if(pIdx !== -1) selectPreset(pIdx); refreshPicker(r.value); window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
-        function exitEditMode() { editingRecordId = null; document.getElementById('submitBtn').innerText = "确认并保存"; document.getElementById('submitBtn').classList.remove('edit-mode'); document.getElementById('cancelBtn').style.display = 'none'; scrollToIndex(0); selectPreset(0); }
-        function deleteRecord(id) { if(confirm("删除记录？")) { let rs = JSON.parse(localStorage.getItem(DATA_KEY)).filter(r => r.id !== id); localStorage.setItem(DATA_KEY, JSON.stringify(rs)); updateUI(); } }
+        function exitEditMode() { editingRecordId = null; document.getElementById('submitBtn').innerText = "确认并保存"; document.getElementById('cancelBtn').style.display = 'none'; selectPreset(0); refreshPicker(0); }
+        function deleteRecord(id) { if(confirm("确定删除？")) { let rs = JSON.parse(localStorage.getItem(DATA_KEY)).filter(r => r.id !== id); localStorage.setItem(DATA_KEY, JSON.stringify(rs)); updateUI(); } }
 
         function updateUI() {
-            const rs = JSON.parse(localStorage.getItem(DATA_KEY) || '[]');
-            const list = document.getElementById('historyList'); list.innerHTML = ''; let last = '';
+            const rs = JSON.parse(localStorage.getItem(DATA_KEY) || '[]'); const listDiv = document.getElementById('historyList'); listDiv.innerHTML = ''; let last = '';
             rs.sort((a,b) => dayjs(b.sportDate).valueOf() - dayjs(a.sportDate).valueOf() || b.id - a.id).forEach(r => {
-                if(r.sportDate !== last) { list.innerHTML += `<div class="date-header">${dayjs(r.sportDate).format('YYYY年MM月DD日')}</div>`; last = r.sportDate; }
-                list.innerHTML += `<div class="record-row" onclick="editRecord(${r.id})"><div style="flex:1"><div class="record-name">${r.name}</div><div class="record-meta">录入于：${r.logTime}</div></div><div style="display:flex;align-items:center"><div class="record-value">${r.value}<span style="font-size:12px;color:#999"> ${r.unit}</span></div><span class="del-btn" onclick="event.stopPropagation();deleteRecord(${r.id})">删除</span></div></div>`;
+                if(r.sportDate !== last) { listDiv.innerHTML += `<div class="date-header">${r.sportDate}</div>`; last = r.sportDate; }
+                listDiv.innerHTML += `<div class="record-row" onclick="editRecord(${r.id})"><div style="flex:1"><div class="record-name">${r.name}</div><div class="record-meta">录入：${r.logTime}</div></div><div style="display:flex;align-items:center"><div class="record-value">${r.value}<span style="font-size:12px;color:#999"> ${r.unit}</span></div><span class="del-btn" onclick="event.stopPropagation();deleteRecord(${r.id})">删除</span></div></div>`;
             });
             updateChart();
         }
 
-        function exportData() { const d = { p: JSON.parse(localStorage.getItem(PRESET_KEY)), r: JSON.parse(localStorage.getItem(DATA_KEY)) }; document.getElementById('backupText').value = btoa(unescape(encodeURIComponent(JSON.stringify(d)))); alert("已生成备份代码！"); }
-        function importData() { try { const d = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('importText').value)))); localStorage.setItem(PRESET_KEY, JSON.stringify(d.p)); localStorage.setItem(DATA_KEY, JSON.stringify(d.r)); location.reload(); } catch(e) { alert("代码无效"); } }
+        function exportData() { const d = { p: presets, r: JSON.parse(localStorage.getItem(DATA_KEY) || '[]') }; navigator.clipboard.writeText(btoa(unescape(encodeURIComponent(JSON.stringify(d))))).then(() => alert("已复制！")); }
+        function importData() { try { const d = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('importText').value)))); localStorage.setItem(PRESET_KEY, JSON.stringify(d.p)); localStorage.setItem(DATA_KEY, JSON.stringify(d.r)); location.reload(); } catch(e) { alert("失败"); } }
 
-        function updateChartProjectList() { const s = document.getElementById('chartProjectFilter'); s.innerHTML = presets.map(p => `<option value="${p.name}">${p.name}</option>`).join(''); updateChart(); }
         function switchRange(range, el) { currentRange = range; document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); updateChart(); }
+        
         function updateChart() {
             const rs = JSON.parse(localStorage.getItem(DATA_KEY) || '[]');
             const name = document.getElementById('chartProjectFilter').value; if(!name) return;
+            const targetPreset = presets.find(p => p.name === name); const unit = targetPreset ? targetPreset.unit : '';
             const filtered = rs.filter(r => r.name === name);
-            let labels = [], data = [], len = currentRange === 'week' ? 7 : (currentRange === 'month' ? 30 : 12);
-            for(let i=len-1; i>=0; i--) {
-                let d = dayjs().subtract(i, currentRange === 'year' ? 'month' : 'day').format(currentRange === 'year' ? 'YYYY-MM' : 'YYYY-MM-DD');
-                labels.push(currentRange === 'year' ? dayjs(d).format('M月') : dayjs(d).format('MM-DD'));
-                data.push(filtered.filter(r => dayjs(r.sportDate).format(currentRange === 'year' ? 'YYYY-MM' : 'YYYY-MM-DD') === d).reduce((s, r) => s + r.value, 0));
+            let labels = [], data = [];
+            
+            if (currentRange === 'year') {
+                for(let i=11; i>=0; i--) {
+                    let m = dayjs().subtract(i, 'month').format('YYYY-MM');
+                    labels.push(dayjs(m).format('M月'));
+                    data.push(filtered.filter(r => dayjs(r.sportDate).format('YYYY-MM') === m).reduce((s, r) => s + r.value, 0));
+                }
+            } else {
+                let len = currentRange === 'week' ? 7 : 30;
+                for(let i=len-1; i>=0; i--) {
+                    let d = dayjs().subtract(i, 'day').format('YYYY-MM-DD');
+                    labels.push(dayjs(d).format('MM-DD'));
+                    data.push(filtered.filter(r => r.sportDate === d).reduce((s, r) => s + r.value, 0));
+                }
             }
+
             if(myChart) myChart.destroy();
-            myChart = new Chart(document.getElementById('myChart'), { type: 'bar', data: { labels, datasets: [{ data, backgroundColor: '#007AFF', borderRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            myChart = new Chart(document.getElementById('myChart'), { 
+                type: 'bar', data: { labels, datasets: [{ data, backgroundColor: '#007AFF', borderRadius: 5 }] }, 
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { y: { title: { display: true, text: `数值 (${unit})`, font: { size: 10 } }, beginAtZero: true } }
+                } 
+            });
         }
 
         document.getElementById('exerciseDate').value = dayjs().format('YYYY-MM-DD');
-        renderPresets(); updateChartProjectList(); updateUI();
+        document.getElementById('chartProjectFilter').innerHTML = presets.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+        renderPresets(); refreshPicker(0); updateUI();
     </script>
 </body>
 </html>
